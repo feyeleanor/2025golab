@@ -2,7 +2,11 @@
 
 package main
 
-import "golang.org/x/sys/unix"
+import (
+	"errors"
+
+	"golang.org/x/sys/unix"
+)
 
 /*
 #include <fcntl.h>
@@ -17,43 +21,43 @@ sem_t *go_sem_open(const char *name) {
 import "C"
 
 func SemOpen(s string) (r uintptr, e error) {
-	if r = C.go_sem_open(s); r == 0 {
-		e = ErrorCode("open failed", 0)
+	if r = uintptr(C.go_sem_open(C.CString(s))); r == 0 {
+		e = errors.New("open failed")
 	}
 	return
 }
 
 func SemClose(s uintptr) (e error) {
 	if r := C.sem_close(s); r != 0 {
-		e = ErrorCode("close failed", r)
+		e = errors.New(fmt.Sprint("close failed: %v", r))
 	}
 	return
 }
 
 func SemUnlink(s string) (e error) {
-	if r := C.sem_unlink(uintptr(CString(s))); r != 0 {
-		e = ErrorCode("unlink failed", r)
+	if r := C.sem_unlink(C.CString(s)); r != 0 {
+		e = errors.New(fmt.Sprint("unlink failed: %v", r))
 	}
 	return
 }
 
 func SemWait(s uintptr) (e error) {
 	if r := C.sem_wait(s); r != 0 {
-		e = ErrorCode("wait failed", r)
+		e = errors.New(fmt.Sprint("wait failed: %v", r))
 	}
 	return
 }
 
 func SemTryWait(s uintptr) (e error) {
 	if r := C.sem_trywait(s); r != 0 {
-		e = ErrorCode("trywait failed", r)
+		e = errors.New(fmt.Sprint("trywait failed: %v", r))
 	}
 	return
 }
 
 func SemPost(s uintptr) (e error) {
 	if r := C.sem_post(s); r != 0 {
-		e = ErrorCode("post failed", r)
+		e = errors.New(fmt.Sprint("post failed: %v", r))
 	}
 	return
 }
