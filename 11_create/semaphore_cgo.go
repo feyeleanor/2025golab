@@ -5,6 +5,7 @@ package main
 import "golang.org/x/sys/unix"
 
 /*
+#include <fcntl.h>
 #include <sys/errno.h>
 #include <stdlib.h>
 #include <semaphore.h>
