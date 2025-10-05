@@ -238,12 +238,9 @@ func Parallelize[T any](s []T, f func(T)) {
 	var w sync.WaitGroup
 
 	for _, n := range s {
-		w.Add(1)
-		go func(n T) {
-			defer w.Done()
-
+		w.Go(func() {
 			f(n)
-		}(n)
+		})
 	}
 	w.Wait()
 }
