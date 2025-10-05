@@ -26,23 +26,30 @@ func main() {
 		OnConnection(s, func(c net.Conn) {
 			MessageLoop(c, func(s string) {
 				log.Println("Received:", s)
-
-				m := []any{}
-				if e := json.Unmarshal([]byte(s), &m); e == nil {
-					for i, v := range m {
-						if v, ok := v.(string); ok {
-							m[i] = string(Reverse([]rune(v)))
-						}
-					}
-				} else {
-					log.Println(e)
-				}
-
-				r, _ := json.Marshal(m)
-				SendMessage(c, r)
+				m := TransformJSON(s, func(v string) string {
+					return string(Reverse([]rune(v)))
+				})
+				SendMessage(c, m)
 			})
 		})
 	} else {
 		log.Fatal(e)
 	}
+}
+
+func TransformJSON[T any](s string, f func(T) T) string {
+	m := []any{}
+	if e := json.Unmarshal([]byte(s), &m); e == nil {
+		log.Println(m)
+		for i, v := range m {
+			if v, ok := v.(T); ok {
+				m[i] = f(v)
+			}
+		}
+	} else {
+		log.Println(e)
+	}
+
+	r, _ := json.Marshal(m)
+	return string(r)
 }

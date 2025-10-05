@@ -17,17 +17,26 @@ func main() {
 			s, _ := json.Marshal(os.Args[2:])
 			SendMessage(c, s)
 			if m, e := ReceiveMessage(c); e == nil {
-				r := []any{}
-				if e = json.Unmarshal([]byte(m), &r); e == nil {
-					for i, v := range r {
-						log.Printf("sent [%v], received [%v]", os.Args[i+2], v)
-					}
-				} else {
-					log.Println(e)
-				}
+				ProcessJSON(m, func(i int, v string) {
+					log.Printf("sent [%v], received [%v]", os.Args[i+2], v)
+				})
 			} else {
 				log.Println(e)
 			}
 		}
 	})
+}
+
+func ProcessJSON[T any](b []byte, f func(int, T)) {
+	m := []any{}
+	if e := json.Unmarshal(b, &m); e == nil {
+		log.Println(m)
+		for i, v := range m {
+			if v, ok := v.(T); ok {
+				f(i, v)
+			}
+		}
+	} else {
+		log.Println(e)
+	}
 }
