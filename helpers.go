@@ -2,10 +2,12 @@ package main
 
 import (
 	"bufio"
+	"context"
 	"errors"
 	"fmt"
 	"io"
 	"log"
+	"net"
 	"os"
 	"os/signal"
 	"strconv"
@@ -264,5 +266,42 @@ func EverySecond(n int, f func()) (w *sync.WaitGroup) {
 			}
 		}
 	}()
+	return
+}
+
+func OnConnection(s net.Listener, f func(net.Conn)) {
+	for {
+		if c, e := s.Accept(); e == nil {
+			f(c)
+		} else {
+			log.Fatal(e)
+		}
+	}
+}
+
+func DialServer(p, a string, f func(net.Conn)) {
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	defer cancel()
+
+	var d net.Dialer
+	if c, e := d.DialContext(ctx, p, a); e == nil {
+		defer c.Close()
+		f(c)
+	} else {
+		log.Println(e)
+	}
+}
+
+func Reverse[T ~[]E, E comparable](s T) (r T) {
+	l := len(s)
+	r = make(T, l)
+	if m := l / 2; m == 0 {
+		copy(r, s)
+	} else {
+		r[m] = s[m]
+		for i, j := 0, l-1; i < m; i, j = i+1, j-1 {
+			r[i], r[j] = s[j], s[i]
+		}
+	}
 	return
 }
